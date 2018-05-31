@@ -48,7 +48,7 @@ public class PassIndexerIT implements IndexerConstants {
 		serv.setElasticsearchIndexUrl("http://localhost:9200/pass/");
 		serv.setFedoraUser("admin");
 		serv.setFedoraPass("moo");
-		serv.setAllowedTypePrefix("http://example.org/pass/");
+		serv.setAllowedTypePrefix("http://oapass.org/ns/pass#");
 
 		serv.start();
 

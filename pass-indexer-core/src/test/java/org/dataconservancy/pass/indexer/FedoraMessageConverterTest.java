@@ -20,7 +20,7 @@ public class FedoraMessageConverterTest {
                 "    \"id\": \"http://fcrepo:8080/fcrepo/rest/grants/30/46/79/7e/3046797e-227c-4da0-ae95-e1828561ca5f\",\n" + 
                 "    \"type\": [\n" + 
                 "        \"http://www.w3.org/ns/ldp#Container\",\n" + 
-                "        \"http://example.org/pass/Grant\",\n" + 
+                "        \"http://oapass.org/ns/pass#Grant\",\n" + 
                 "        \"http://fedora.info/definitions/v4/repository#Resource\",\n" + 
                 "        \"http://fedora.info/definitions/v4/repository#Container\",\n" + 
                 "        \"http://www.w3.org/ns/ldp#RDFSource\",\n" + 
@@ -88,7 +88,7 @@ public class FedoraMessageConverterTest {
         
         String[] expected_types = new String[] {
             "http://www.w3.org/ns/ldp#Container", 
-            "http://example.org/pass/Grant", 
+            "http://oapass.org/ns/pass#Grant", 
             "http://fedora.info/definitions/v4/repository#Resource",
             "http://fedora.info/definitions/v4/repository#Container",
             "http://www.w3.org/ns/ldp#RDFSource",
@@ -104,7 +104,7 @@ public class FedoraMessageConverterTest {
                 "    \"id\": \"http://fcrepo:8080/fcrepo/rest/submissions/7f/cc/6f/c5/7fcc6fc5-10c8-476d-b537-cf13f20d9be7\",\n" + 
                 "    \"type\": [\n" + 
                 "        \"http://www.w3.org/ns/ldp#Container\",\n" + 
-                "        \"http://example.org/pass/Submission\",\n" + 
+                "        \"http://oapass.org/ns/pass#Submission\",\n" + 
                 "        \"http://fedora.info/definitions/v4/repository#Resource\",\n" + 
                 "        \"http://fedora.info/definitions/v4/repository#Container\",\n" + 
                 "        \"http://www.w3.org/ns/ldp#RDFSource\",\n" + 
@@ -171,7 +171,7 @@ public class FedoraMessageConverterTest {
         
         String[] expected_types = new String[] {
             "http://www.w3.org/ns/ldp#Container", 
-            "http://example.org/pass/Submission", 
+            "http://oapass.org/ns/pass#Submission", 
             "http://fedora.info/definitions/v4/repository#Resource",
             "http://fedora.info/definitions/v4/repository#Container",
             "http://www.w3.org/ns/ldp#RDFSource",
@@ -187,7 +187,7 @@ public class FedoraMessageConverterTest {
                 "    \"id\": \"http://fcrepo:8080/fcrepo/rest/people/bc/1b/6a/e5/bc1b6ae5-f252-4402-aa3a-c240b4c55b40\",\n" + 
                 "    \"type\": [\n" + 
                 "        \"http://www.w3.org/ns/ldp#Container\",\n" + 
-                "        \"http://example.org/pass/Person\",\n" + 
+                "        \"http://oapass.org/ns/pass#Person\",\n" + 
                 "        \"http://fedora.info/definitions/v4/repository#Resource\",\n" + 
                 "        \"http://fedora.info/definitions/v4/repository#Container\",\n" + 
                 "        \"http://www.w3.org/ns/ldp#RDFSource\",\n" + 
@@ -253,7 +253,7 @@ public class FedoraMessageConverterTest {
         
         String[] expected_types = new String[] {
             "http://www.w3.org/ns/ldp#Container", 
-            "http://example.org/pass/Person", 
+            "http://oapass.org/ns/pass#Person", 
             "http://fedora.info/definitions/v4/repository#Resource",
             "http://fedora.info/definitions/v4/repository#Container",
             "http://www.w3.org/ns/ldp#RDFSource",

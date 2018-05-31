@@ -77,7 +77,7 @@ Configuration properties:
 * PI_ES_CONFIG=/file/or/resource/path/config.json
 * PI_FEDORA_JMS_BROKER=tcp://fcrepo:61616
 * PI_FEDORA_JMS_QUEUE=fedora
-* PI_TYPE_PREFIX=http://example.org/pass/
+* PI_TYPE_PREFIX=http://oapass.org/ns/pass#
 * PI_LOG_LEVEL=debug
 
 

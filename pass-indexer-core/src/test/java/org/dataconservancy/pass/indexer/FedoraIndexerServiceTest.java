@@ -39,7 +39,7 @@ public class FedoraIndexerServiceTest {
         es_index_url = server.url("/es/test/");
         queue = "fedora";
         service = new FedoraIndexerService();
-        service.setAllowedTypePrefix("http://example.org/");
+        service.setAllowedTypePrefix("http://oapass.org/");
         service.setElasticsearchIndexUrl(es_index_url.toString());
         service.setFedoraUser("moo");
         service.setFedoraPass("moo");
@@ -85,7 +85,7 @@ public class FedoraIndexerServiceTest {
                 "    \"id\": \"" + fedora_res_uri + "\",\n" + 
                 "    \"type\": [\n" + 
                 "        \"http://www.w3.org/ns/ldp#Container\",\n" + 
-                "        \"http://example.org/pass/Grant\",\n" + 
+                "        \"http://oapass.org/ns/pass#Grant\",\n" + 
                 "        \"http://fedora.info/definitions/v4/repository#Resource\",\n" + 
                 "        \"http://fedora.info/definitions/v4/repository#Container\",\n" + 
                 "        \"http://www.w3.org/ns/ldp#RDFSource\",\n" + 
