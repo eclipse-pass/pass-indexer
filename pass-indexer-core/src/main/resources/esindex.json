@@ -95,6 +95,7 @@
         "publisher": {"type": "keyword", "normalizer": "fedora_uri"},
         "publication": {"type": "keyword", "normalizer": "fedora_uri"},        
         "repository": {"type": "keyword", "normalizer": "fedora_uri"},
+        "repositoryKey": {"type": "keyword"},
         "repositoryCopy": {"type": "keyword", "normalizer": "fedora_uri"},
         "repositories": {"type": "keyword", "normalizer": "fedora_uri"},        
         "roles": {"type": "keyword"},
