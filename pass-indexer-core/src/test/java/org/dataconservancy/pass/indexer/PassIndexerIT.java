@@ -124,7 +124,7 @@ public class PassIndexerIT implements IndexerConstants {
 
 		// Must set @id to ""
 		result.put("@id", "");
-		result.put("@context", "https://oa-pass.github.io/pass-data-model/src/main/resources/context-2.3.jsonld");
+		result.put("@context", "https://oa-pass.github.io/pass-data-model/src/main/resources/context-3.0.jsonld");
 		result.put("@type", type);
 
 		return result;
