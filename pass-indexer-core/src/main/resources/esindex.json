@@ -50,6 +50,7 @@
         "abstract": {"type": "text"},
         "accessUrl": {"type": "keyword", "normalizer": "fedora_uri"},
         "affiliation": {"type": "text"},
+        "aggregatedDepositStatus": {"type": "keyword"},
         "agreementText": {"type": "text"},
         "awardDate": {"type": "date"},        
         "awardNumber": {"type": "keyword", "normalizer": "award_number"},
