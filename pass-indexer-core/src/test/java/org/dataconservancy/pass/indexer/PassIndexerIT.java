@@ -342,8 +342,8 @@ public class PassIndexerIT implements IndexerConstants {
         assertTrue(is_fedora_resource_indexed(uri2));
         assertTrue(is_fedora_resource_indexed(uri3));
     
-        JSONObject result = execute_es_query(create_completion_query("suggest", "user_suggest", "bes", null));
-        JSONObject completions = result.getJSONObject("suggest").getJSONArray("user_suggest").getJSONObject(0);
+        JSONObject result = execute_es_query(create_completion_query("suggest_user", "suggest_user", "bes", null));
+        JSONObject completions = result.getJSONObject("suggest").getJSONArray("suggest_user").getJSONObject(0);
 
         // Check that each user is suggested because bes is the prefix of some attribute for each
         
