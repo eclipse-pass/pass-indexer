@@ -142,13 +142,13 @@ public class PassIndexerIT implements IndexerConstants {
 		return query;
 	}
 	
-	private JSONObject create_completion_query(String field, String prefix, JSONObject context) {
+	private JSONObject create_completion_query(String field, String suggest_name, String prefix, JSONObject context) {
 		JSONObject query = new JSONObject();
 		JSONObject suggest= new JSONObject();
 		JSONObject field_suggest = new JSONObject();
 		JSONObject completion = new JSONObject();
 		
-		completion.put("field", field + "_suggest");
+		completion.put("field", field);
 		completion.put("size", 100);
 		
 		if (context != null) {
@@ -158,7 +158,7 @@ public class PassIndexerIT implements IndexerConstants {
 		field_suggest.put("prefix", prefix);
 		field_suggest.put("completion", completion);		
 
-		suggest.put(field, field_suggest);
+		suggest.put(suggest_name, field_suggest);
 		
 		query.put("suggest", suggest);
 
@@ -273,44 +273,91 @@ public class PassIndexerIT implements IndexerConstants {
 		assertTrue(is_fedora_resource_indexed(get_fedora_resource_path(uri)));
 	}
 	
-	// Show that journalName supports completion
+	// Show that journalName supports completion as added by the indexer.
 	// A completion can start at any word.
-	@Test
-	public void testCompletion() throws Exception {
-		JSONObject journal1 = create_pass_object("Journal");
-		journal1.put("journalName", "Cows and other mammals.");
+    @Test
+    public void testCompletionAddedByIndexer() throws Exception {
+        JSONObject journal1 = create_pass_object("Journal");
+        journal1.put("journalName", "Cows and other mammals.");
 
-		JSONObject journal2 = create_pass_object("Journal");
-		journal2.put("journalName", "Consider the cow.");
-		
-		JSONObject journal3 = create_pass_object("Journal");
-		journal3.put("journalName", "Squirrels, cows, and bunnies");
-		
-		String uri1 = post_fedora_resource("journals", journal1);
-		String uri2 = post_fedora_resource("journals", journal2);
-		String uri3 = post_fedora_resource("journals", journal3);
-		
-		Thread.sleep(WAIT_TIME);
-		
-		assertTrue(is_fedora_resource_indexed(uri1));
-		assertTrue(is_fedora_resource_indexed(uri2));
-		assertTrue(is_fedora_resource_indexed(uri3));
+        JSONObject journal2 = create_pass_object("Journal");
+        journal2.put("journalName", "Consider the cow.");
+        
+        JSONObject journal3 = create_pass_object("Journal");
+        journal3.put("journalName", "Squirrels, cows, and bunnies");
+        
+        String uri1 = post_fedora_resource("journals", journal1);
+        String uri2 = post_fedora_resource("journals", journal2);
+        String uri3 = post_fedora_resource("journals", journal3);
+        
+        Thread.sleep(WAIT_TIME);
+        
+        assertTrue(is_fedora_resource_indexed(uri1));
+        assertTrue(is_fedora_resource_indexed(uri2));
+        assertTrue(is_fedora_resource_indexed(uri3));
+    
+        JSONObject result = execute_es_query(create_completion_query("journalName_suggest", "journalName", "co", null));
+        JSONObject completions = result.getJSONObject("suggest").getJSONArray("journalName").getJSONObject(0);
+
+        // Check that each journal is suggested
+        
+        List<String> suggested = new ArrayList<>();
+        
+        completions.getJSONArray("options").forEach(o -> {
+            suggested.add(JSONObject.class.cast(o).getJSONObject("_source").getString("@id"));
+        });
+        
+        Arrays.asList(uri1, uri2, uri3).forEach(uri -> {
+            assertTrue("Suggestion should contain " + uri, suggested.contains(uri));
+        });
+    }
+    
+    // Test that the firstName, lastName, email, and displayName fields are automatically copied to suggest
+    // as set in the mapping.
+    @Test
+    public void testCompletionAddedByMapping() throws Exception {
+        JSONObject user1 = create_pass_object("User");
+        user1.put("firstName", "Bessie");
+        user1.put("lastName", "Cow");
+        user1.put("displayName", "Beth Cow");
+        user1.put("email", "moo1@example.com");
+        
+        JSONObject user2 = create_pass_object("User");
+        user2.put("firstName", "Bessie");
+        user2.put("displayName", "Bessie Cow");
+        user2.put("email", "moo2@example.com");
+        
+        JSONObject user3 = create_pass_object("User");
+        user3.put("lastName", "Best");
+        user3.put("displayName", "Wilbur Bestcow");
+        user3.put("email", "moo3@example.com");
+
+        String uri1 = post_fedora_resource("users", user1);
+        String uri2 = post_fedora_resource("users", user2);
+        String uri3 = post_fedora_resource("users", user3);
+        
+        Thread.sleep(WAIT_TIME);
+        
+        assertTrue(is_fedora_resource_indexed(uri1));
+        assertTrue(is_fedora_resource_indexed(uri2));
+        assertTrue(is_fedora_resource_indexed(uri3));
+    
+        JSONObject result = execute_es_query(create_completion_query("suggest", "user_suggest", "bes", null));
+        JSONObject completions = result.getJSONObject("suggest").getJSONArray("user_suggest").getJSONObject(0);
+
+        // Check that each user is suggested because bes is the prefix of some attribute for each
+        
+        List<String> suggested = new ArrayList<>();
+        
+        completions.getJSONArray("options").forEach(o -> {
+            suggested.add(JSONObject.class.cast(o).getJSONObject("_source").getString("@id"));
+        });
+        
+        Arrays.asList(uri1, uri2, uri3).forEach(uri -> {
+            assertTrue("Suggestion should contain " + uri, suggested.contains(uri));
+        });
+    }
 	
-		JSONObject result = execute_es_query(create_completion_query("journalName", "co", null));
-		JSONObject completions = result.getJSONObject("suggest").getJSONArray("journalName").getJSONObject(0);
-
-		// Check that each journal is suggested
-		
-		List<String> suggested = new ArrayList<>();
-		
-		completions.getJSONArray("options").forEach(o -> {
-			suggested.add(JSONObject.class.cast(o).getJSONObject("_source").getString("@id"));
-		});
-		
-		Arrays.asList(uri1, uri2, uri3).forEach(uri -> {
-			assertTrue("Suggestion should contain " + uri, suggested.contains(uri));
-		});
-	}
 	
 	// Show that projectName supports completion with a pi category.
 	// No longer needed so removed from index config.
@@ -356,7 +403,7 @@ public class PassIndexerIT implements IndexerConstants {
 		JSONObject context = new JSONObject();
 		context.put("pi", get_fedora_resource_path(pi1_uri));
 		
-		JSONObject result = execute_es_query(create_completion_query("projectName", "cre", context));
+		JSONObject result = execute_es_query(create_completion_query("projectName_suggest", "projectName", "cre", context));
 		JSONObject completions = result.getJSONObject("suggest").getJSONArray("projectName").getJSONObject(0);
 		JSONArray options = completions.getJSONArray("options");
 				
