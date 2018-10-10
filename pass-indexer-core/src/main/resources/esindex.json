@@ -37,6 +37,14 @@
           "char_filter": ["period_dash_whitespace_ignore", "nih_zero_ignore"],
           "filter": ["lowercase", "asciifolding"]
         }
+      },
+      "analyzer": {
+        "keyword_ignorecase": {
+          "type":      "custom", 
+          "tokenizer": "keyword",
+          "char_filter": [],
+          "filter": ["lowercase", "asciifolding"]
+        }
       }
     }
   },
@@ -62,21 +70,21 @@
         "depositStatusRef": {"type": "keyword"},
         "description": {"type": "text"},
         "directFunder": {"type": "keyword", "normalizer": "fedora_uri"},
-        "displayName": {"type": "text"},        
+        "displayName": {"type": "text", "copy_to": "suggest"},
         "doi": {"type": "keyword", "normalizer": "ignorecase"},
-        "email": {"type": "keyword"},
+        "email": {"type": "keyword", "copy_to": "suggest"},
         "endDate": {"type": "date"},
         "eventType": {"type": "keyword"},
         "externalIds": {"type": "keyword", "normalizer": "fedora_uri"},
         "fileRole": {"type": "keyword"},
-        "firstName": {"type": "keyword"},
+        "firstName": {"type": "keyword", "copy_to": "suggest"},
         "formSchema": {"type": "keyword"},        
         "grants": {"type": "keyword", "normalizer": "fedora_uri"},
         "integrationType": {"type": "keyword"},
         "institution": {"type": "keyword"},
         "issue": {"type": "keyword"},
         "issns": {"type": "keyword"},
-        "lastName": {"type": "keyword"},
+        "lastName": {"type": "keyword", "copy_to": "suggest"},
         "locatorIds": {"type": "keyword"},
         "journal": {"type": "keyword", "normalizer": "fedora_uri"},
         "journalName": {"type": "text"},
@@ -114,10 +122,11 @@
         "submitted": {"type": "boolean"},
         "submittedDate": {"type": "date"},
         "submitter": {"type": "keyword", "normalizer": "fedora_uri"},
+        "suggest": {"type": "completion", "analyzer": "keyword_ignorecase"},
         "title": {"type": "text"},        
         "uri": {"type": "keyword"},
         "url": {"type": "keyword"},
-        "user": {"type": "keyword", "normalizer": "fedora_uri"},        
+        "user": {"type": "keyword", "normalizer": "fedora_uri"},
         "username": {"type": "keyword"},
         "volume": {"type": "keyword"}
       }
