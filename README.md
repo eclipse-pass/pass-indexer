@@ -28,10 +28,11 @@ NAME, add a mapping for NAME_suggest of type completion. The field NAME_suggest 
 contents of NAME by the indexer. The content of NAME will have a completion for the substring starting at each token. So
 if the content is "token1 token2 token3", there will be completions, "token1 token2 token3", "token2 token3", and "token3".
 
-A consequence of the auto-completion is that NAME_suggest fields will appear in the _source document returned by Elasticsearch.
+This support for completion in the middle of a string is wasteful. It is better to automatically create a completion fields using copy_to.
+Another consequence of this approach is that NAME_suggest fields will appear in the _source document returned by Elasticsearch.
 See https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-source-filtering.html for options.
 
-You can search like below to find journName with a word beginning with "R".
+You can search like below to find journalName with a word beginning with "R".
 
 ```
 curl -X POST "http://localhost:9200/pass/_search?pretty" -H 'Content-Type: application/json' -d'
@@ -48,6 +49,27 @@ curl -X POST "http://localhost:9200/pass/_search?pretty" -H 'Content-Type: appli
 '
 ```
 
+There is also a suggest_person completion field which is automatically created by the mapping by combining "firstName", "lastName", "displayName", and "email" attributes. A custom analyzer
+treats these strings like keywords and ignores case. Since both User and Contributor objects have these attributes, both will have a suggest_person field.
+The field also has a "type" category which will be the value of the "@type" attribute of the object. This can be used to only match Users or Contributors when doing completion.
+
+Note that the number of results returned by default is 5. This can be increased, but should remain small. There is also no way to determine the total number of matches.
+
+Here is an example of using the type category:
+```
+curl 'http://localhost:9200/pass/_search?pretty' -H 'Content-Type: application/json; charset=UTF-8' --data-binary '
+ {
+    "suggest": {
+        "mysuggest": {
+            "prefix": "bes",
+            "completion": {
+                "field": "suggest_person",
+                "context": {"type": "User"}
+            }
+        }
+    }
+}'
+```
 
 # Handling Fedora URIs
 
