@@ -335,7 +335,7 @@ public class PassIndexerIT implements IndexerConstants {
         contrib1.put("firstName", "Willy");
         contrib1.put("lastName", "Best");
         contrib1.put("displayName", "Wilbur Bestcow");
-        contrib1.put("email", "moo3@example.com");
+        contrib1.put("email", "moo4@example.com");
 
         String uri1 = post_fedora_resource("users", user1);
         String uri2 = post_fedora_resource("users", user2);
