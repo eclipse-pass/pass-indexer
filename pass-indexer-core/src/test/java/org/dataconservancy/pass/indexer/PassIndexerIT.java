@@ -14,7 +14,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import okhttp3.Credentials;
@@ -331,21 +330,33 @@ public class PassIndexerIT implements IndexerConstants {
         user3.put("lastName", "Best");
         user3.put("displayName", "Wilbur Bestcow");
         user3.put("email", "moo3@example.com");
+        
+        JSONObject contrib1 = create_pass_object("Contributor");
+        contrib1.put("firstName", "Willy");
+        contrib1.put("lastName", "Best");
+        contrib1.put("displayName", "Wilbur Bestcow");
+        contrib1.put("email", "moo3@example.com");
 
         String uri1 = post_fedora_resource("users", user1);
         String uri2 = post_fedora_resource("users", user2);
         String uri3 = post_fedora_resource("users", user3);
+        String uri4 = post_fedora_resource("contributors", contrib1);
         
         Thread.sleep(WAIT_TIME);
         
         assertTrue(is_fedora_resource_indexed(uri1));
         assertTrue(is_fedora_resource_indexed(uri2));
         assertTrue(is_fedora_resource_indexed(uri3));
+        assertTrue(is_fedora_resource_indexed(uri4));
     
-        JSONObject result = execute_es_query(create_completion_query("suggest_user", "suggest_user", "bes", null));
-        JSONObject completions = result.getJSONObject("suggest").getJSONArray("suggest_user").getJSONObject(0);
+        JSONObject context = new JSONObject();
+        context.put("type", "User");
+        
+        JSONObject result = execute_es_query(create_completion_query("suggest_person", "suggest_person", "bes", context));
+        JSONObject completions = result.getJSONObject("suggest").getJSONArray("suggest_person").getJSONObject(0);
 
         // Check that each user is suggested because bes is the prefix of some attribute for each
+        // The contributor should not be matched because of the context.
         
         List<String> suggested = new ArrayList<>();
         
@@ -356,58 +367,7 @@ public class PassIndexerIT implements IndexerConstants {
         Arrays.asList(uri1, uri2, uri3).forEach(uri -> {
             assertTrue("Suggestion should contain " + uri, suggested.contains(uri));
         });
+        
+        assertFalse("Suggestion should not contain " + uri4, suggested.contains(uri4));
     }
-	
-	
-	// Show that projectName supports completion with a pi category.
-	// No longer needed so removed from index config.
-	@Test
-	@Ignore
-	public void testCompletionWithContext() throws Exception {
-		// Create PIs
-		
-		JSONObject pi1 = create_pass_object("User");
-		pi1.put("username", "bobafett");
-		pi1.put("email", "boba@example.org");
-		
-		JSONObject pi2 = create_pass_object("User");
-		pi2.put("username", "ackbar");
-		pi2.put("email", "itsatrap@example.org");
-
-		String pi1_uri = post_fedora_resource("users", pi1);
-		String pi2_uri = post_fedora_resource("users", pi2);
-		
-		Thread.sleep(WAIT_TIME);
-		
-		// Create grant for each PI
-
-		JSONObject grant1 = create_pass_object("Grant");
-		grant1.put("projectName", "Ice Cream: Chocolate or Vanilla?");
-		grant1.put("pi", pi1_uri);
-
-		JSONObject grant2 = create_pass_object("Grant");
-		grant2.put("projectName", "Making Excellent Ice Cream");
-		grant2.put("pi", pi2_uri);
-
-		String grant1_uri = post_fedora_resource("grants", grant1);
-		String grant2_uri = post_fedora_resource("grants", grant2);
-		
-		Thread.sleep(WAIT_TIME);
-		
-		assertTrue(is_fedora_resource_indexed(pi1_uri));
-		assertTrue(is_fedora_resource_indexed(pi2_uri));
-		assertTrue(is_fedora_resource_indexed(grant1_uri));
-		assertTrue(is_fedora_resource_indexed(grant2_uri));
-	
-		// The prefix cre matches both grants, context should only match pi1
-		JSONObject context = new JSONObject();
-		context.put("pi", get_fedora_resource_path(pi1_uri));
-		
-		JSONObject result = execute_es_query(create_completion_query("projectName_suggest", "projectName", "cre", context));
-		JSONObject completions = result.getJSONObject("suggest").getJSONArray("projectName").getJSONObject(0);
-		JSONArray options = completions.getJSONArray("options");
-				
-		assertEquals(1, options.length());
-		assertEquals(pi1_uri, options.getJSONObject(0).getJSONObject("_source").getString("pi"));
-	}
 }
