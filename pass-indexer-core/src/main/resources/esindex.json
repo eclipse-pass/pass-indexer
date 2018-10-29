@@ -114,6 +114,8 @@
         "submitted": {"type": "boolean"},
         "submittedDate": {"type": "date"},
         "submitter": {"type": "keyword", "normalizer": "fedora_uri"},
+        "submitterEmail": {"type": "keyword"},
+        "submitterName": {"type": "text", "analyzer": "simple"},
         "title": {"type": "text"},        
         "uri": {"type": "keyword"},
         "url": {"type": "keyword"},
