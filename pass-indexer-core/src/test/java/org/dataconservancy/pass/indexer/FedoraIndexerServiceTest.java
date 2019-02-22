@@ -41,6 +41,7 @@ public class FedoraIndexerServiceTest {
         service = new FedoraIndexerService();
         service.setAllowedTypePrefix("http://oapass.org/");
         service.setElasticsearchIndexUrl(es_index_url.toString());
+        service.setElasticsearchIndexConfig("/esindex.json");
         service.setFedoraUser("moo");
         service.setFedoraPass("moo");
         service.setJmsConnectionFactory(broker.createConnectionFactory());
