@@ -5,7 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.util.stream.Collectors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,21 +27,30 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
     private MockWebServer server;
     private ElasticSearchIndexer indexer;
     private HttpUrl es_index_url;
+    private HttpUrl es_config_url;
 
     @Before
     public void setup() throws Exception {
         server = new MockWebServer();
         es_index_url = server.url("/es/test/");
-        
-        // GET for Elasticsearch index config
+        es_config_url = server.url("/esconfig.json");
+
+        // GET for Elasticsearch index
         server.enqueue(new MockResponse().setResponseCode(404));
         
-        // PUT for Elasticsearch index config
+        // GET for Elasticsearch index config. Use URL for config to test support.
+        try (InputStream is = ElasticSearchIndexerTest.class.getResourceAsStream("/esindex.json")) {
+            String json = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8"))).lines().collect(Collectors.joining("\n"));
+            server.enqueue(new MockResponse().setBody(json));
+        }
+        
+        // PUT to create Elasticsearch index
         server.enqueue(new MockResponse().setBody("{}"));
         
-        indexer = new ElasticSearchIndexer(es_index_url.toString(), null, "admin", "admin");
+        indexer = new ElasticSearchIndexer(es_index_url.toString(), es_config_url.toString(), "admin", "admin");
         
-        // Drain index config requests
+        // Drain index setup requests
+        server.takeRequest();
         server.takeRequest();
         server.takeRequest();
     }

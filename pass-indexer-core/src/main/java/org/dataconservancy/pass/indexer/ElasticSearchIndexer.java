@@ -2,6 +2,7 @@ package org.dataconservancy.pass.indexer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -41,9 +42,6 @@ import okhttp3.Response;
  * Fedora resource.
  */
 public class ElasticSearchIndexer implements IndexerConstants {
-    // Resource path to provided Elasticsearch configuration for PASS.
-    private static final String ES_INDEX_CONFIG = "/esindex.json";
-    
     private static final String SUGGEST_SUFFIX = "_suggest";
     private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchIndexer.class);
 
@@ -74,10 +72,6 @@ public class ElasticSearchIndexer implements IndexerConstants {
         JSONObject config = get_existing_index_configuration();
 
         if (config == null) {
-            if (es_index_config == null) {
-                es_index_config = ES_INDEX_CONFIG;
-            }
-            
             LOG.info("Index does not exist. Creating " + es_index_url + " with config " + es_index_config);
             config = load_index_configuration(es_index_config);
             create_index(config);
@@ -120,28 +114,53 @@ public class ElasticSearchIndexer implements IndexerConstants {
         }
     }
     
-    // Return the index configuration specifies as a file or resource. 
+    // Return the index configuration specified as a file, resource, or URL.
     private JSONObject load_index_configuration(String es_index_config) throws IOException {
+        boolean is_url = false;
+
+        try {
+            new URL(es_index_config);
+            is_url = true;
+        } catch (MalformedURLException e) {
+        }
+
+        if (is_url) {
+            LOG.info("Loading index configuration from URL: " + es_index_config);
+
+            Request get = new Request.Builder().url(es_index_config).build();
+
+            try (Response response = client.newCall(get).execute()) {
+                if (!response.isSuccessful()) {
+                    String msg = "Failed to retrieve specified index config: " + es_index_config + " "
+                            + response.code();
+                    LOG.error(msg);
+                    throw new IOException(msg);
+                }
+
+                return new JSONObject(response.body().string());
+            }
+        }
+ 
         Path path = Paths.get(es_index_config);
-        
+
         if (Files.exists(path)) {
             LOG.info("Loading index configuration from file: " + es_index_config);
 
             try (InputStream is = Files.newInputStream(path)) {
                 return new JSONObject(new JSONTokener(is));
             }
-        } else {
-            LOG.info("Loading index configuration from classpath: " + es_index_config);
-            
-            try (InputStream is = this.getClass().getResourceAsStream(es_index_config)) {
-                if (is == null) {
-                    String msg = "Index configuration not found on classpath: " + es_index_config;
-                    LOG.error(msg);
-                    throw new IOException(msg);
-                }
-                
-                return new JSONObject(new JSONTokener(is));
+        }
+
+        LOG.info("Loading index configuration from classpath: " + es_index_config);
+
+        try (InputStream is = this.getClass().getResourceAsStream(es_index_config)) {
+            if (is == null) {
+                String msg = "Index configuration not found on classpath: " + es_index_config;
+                LOG.error(msg);
+                throw new IOException(msg);
             }
+
+            return new JSONObject(new JSONTokener(is));
         }
     }
 

@@ -46,6 +46,7 @@ public class PassIndexerIT implements IndexerConstants {
 		serv.setJmsConnectionFactory(new ActiveMQConnectionFactory("tcp://localhost:61616"));
 		serv.setJmsQueue("fedora");
 		serv.setElasticsearchIndexUrl("http://localhost:9200/pass/");
+		serv.setElasticsearchIndexConfig("/esindex.json");
 		serv.setFedoraUser("fedoraAdmin");
 		serv.setFedoraPass("moo");
 		serv.setAllowedTypePrefix("http://oapass.org/ns/pass#");

@@ -64,6 +64,18 @@ public class FedoraIndexerService implements AutoCloseable {
     }
 
     public void start() throws IOException {
+        if (elasticsearch_index_url == null) {
+            String msg = "Index location not specified.";
+            LOG.error(msg);
+            throw new IOException(msg);
+        }
+        
+        if (elasticsearch_index_config == null) {
+            String msg = "Index configuration not specified.";
+            LOG.error(msg);
+            throw new IOException(msg);
+        }
+        
         jms_client = new JmsClient(jms_con_fact);
 
         ElasticSearchIndexer es = new ElasticSearchIndexer(elasticsearch_index_url, elasticsearch_index_config, fedora_user, fedora_pass);
