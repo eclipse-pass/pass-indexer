@@ -111,7 +111,7 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         
         assertEquals(res_json.get("journalName"), payload.get("journalName"));
         
-        // Should have projectName_suggest added for projectName by Elasticsearch 
+        // Should have journalName_suggest added for projectName by Elasticsearch 
         // Should be completion for each word.
         String journal = res_json.get("journalName").toString();
         JSONArray completions = payload.getJSONArray("journalName_suggest");
@@ -123,6 +123,67 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         assertEquals(res_json.get("@id"), payload.get("@id"));
         assertEquals(res_json.get("@type"), payload.get("@type"));        
         assertEquals(res_json.get("name"), payload.get("name"));
+        assertFalse(payload.has(CREATED_FIELD));
+        assertFalse(payload.has(MODIFIED_FIELD));
+        
+        assertEquals("application/json; charset=utf-8", es_post.getHeader("Content-Type"));
+        assertTrue(es_post.getRequestUrl().toString().startsWith(es_index_url.toString()));
+    }
+    
+    @Test
+    public void testCreateMessageWithDates() throws Exception {
+        // Mock message about created Fedora resource
+
+        String fedora_res_uri = server.url("/fcrepo/cow/moo").toString();
+
+        JSONObject res_json = new JSONObject();
+        res_json.put("@id", fedora_res_uri);
+        res_json.put("@type", "Cow");        
+        res_json.put("@context",
+                "https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm.jsonld");
+        res_json.put("awardNumber", "abc123");
+        res_json.put("name", "moo");
+
+        // GET for Fedora resource
+        MockResponse resp = new MockResponse().setBody(res_json.toString());
+        String created = "2010-05-29T14:17:39+02:00";
+        String modified = "2015-01-01T13:12:11+02:00";
+        resp.addHeader(FEDORA_CREATED_HEADER, created);
+        resp.addHeader(FEDORA_MODIFIED_HEADER, modified);
+        server.enqueue(resp);
+
+        // POST to Elasticsearch
+        server.enqueue(new MockResponse().setBody("{}"));
+
+        FedoraMessage m = new FedoraMessage();
+        m.setAction(FedoraAction.CREATED);
+        m.setResourceURI(fedora_res_uri);
+
+        indexer.handle(m);
+
+        // Check the requests
+        
+        RecordedRequest fedora_get = server.takeRequest();
+
+        assertEquals("GET", fedora_get.getMethod());
+        assertNotNull(fedora_get.getHeader("Authorization"));
+        assertEquals(FEDORA_ACCEPT_HEADER, fedora_get.getHeader("Accept"));
+        assertEquals(FEDORA_PREFER_HEADER, fedora_get.getHeader("Prefer"));
+        assertEquals(fedora_res_uri, fedora_get.getRequestUrl().toString());
+
+        RecordedRequest es_post = server.takeRequest();
+
+        assertEquals("POST", es_post.getMethod());
+        
+        JSONObject payload = new JSONObject(es_post.getBody().readUtf8());
+        
+        // Check the JSON posted to Elasticsearch. 
+                        
+        assertEquals(res_json.get("@id"), payload.get("@id"));
+        assertEquals(res_json.get("@type"), payload.get("@type"));        
+        assertEquals(res_json.get("name"), payload.get("name"));
+        assertEquals(created, payload.get(CREATED_FIELD));
+        assertEquals(modified, payload.get(MODIFIED_FIELD));
         
         assertEquals("application/json; charset=utf-8", es_post.getHeader("Content-Type"));
         assertTrue(es_post.getRequestUrl().toString().startsWith(es_index_url.toString()));
@@ -165,7 +226,6 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         res_json.put("@id", fedora_res_uri);
         res_json.put("@context",
                 "https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm.jsonld");
-        res_json.put("healthy", true);
         res_json.put("name", "moo");
 
         // GET for Fedora resource
@@ -197,6 +257,10 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         JSONObject payload = new JSONObject(post.getBody().readUtf8());
         
         assertEquals(res_json.get("@id"), payload.get("@id"));
+        assertEquals(res_json.get("name"), payload.get("name"));        
+        assertFalse(payload.has(CREATED_FIELD));
+        assertFalse(payload.has(MODIFIED_FIELD));
+        
         assertEquals("application/json; charset=utf-8", post.getHeader("Content-Type"));
         assertTrue(post.getRequestUrl().toString().startsWith(es_index_url.toString()));
     }

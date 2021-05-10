@@ -2,9 +2,14 @@ package org.dataconservancy.pass.indexer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -197,6 +202,16 @@ public class PassIndexerIT implements IndexerConstants {
 		return hits.length() == 1;
 	}
 
+	private LocalDateTime parseISODateTime(String s) {
+        try {
+
+            return LocalDateTime.from(DateTimeFormatter.ISO_DATE_TIME.parse(s));
+        } catch (DateTimeParseException e) {
+            assertTrue("Invalid date " + s + ": " + e, false);
+            return null;
+        }
+	}
+	
 	// Check that Elasticsearch document is created for a Fedora User resource.
 	// When the Fedora resource is updated, so is the document.
 	@Test
@@ -208,6 +223,9 @@ public class PassIndexerIT implements IndexerConstants {
 		String uri = post_fedora_resource("users", user);
 		Thread.sleep(WAIT_TIME);
 
+		LocalDateTime created;
+		LocalDateTime modified;
+		
 		// Check Es document
 		{
 			JSONObject result = get_indexed_fedora_resource(uri);
@@ -217,6 +235,14 @@ public class PassIndexerIT implements IndexerConstants {
 			user.keySet().forEach(key -> {
 				assertEquals(result.get(key), user.get(key));
 			});
+			
+	         assertTrue(result.has(CREATED_FIELD));
+	         assertTrue(result.has(MODIFIED_FIELD));
+	            
+	         created = parseISODateTime(result.getString(CREATED_FIELD));
+	         modified = parseISODateTime(result.getString(MODIFIED_FIELD));
+	         
+	         assertTrue(created.equals(modified) || created.isBefore(modified));
 		}
 
 		// Update the Fedora resource
@@ -232,6 +258,18 @@ public class PassIndexerIT implements IndexerConstants {
 			user.keySet().forEach(key -> {
 				assertEquals(result.get(key), user.get(key));
 			});
+			
+			
+            assertTrue(result.has(CREATED_FIELD));
+            assertTrue(result.has(MODIFIED_FIELD));
+            
+            
+            LocalDateTime updated_created = parseISODateTime(result.getString(CREATED_FIELD));
+            LocalDateTime updated_modified = parseISODateTime(result.getString(MODIFIED_FIELD));            
+            
+            assertEquals(created, updated_created);
+            assertNotEquals(modified, updated_modified);
+            assertTrue(modified.isBefore(updated_modified));
 		}
 	}
 
