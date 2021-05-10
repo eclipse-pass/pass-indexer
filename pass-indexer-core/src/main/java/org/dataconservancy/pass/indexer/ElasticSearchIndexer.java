@@ -35,7 +35,8 @@ import okhttp3.Response;
  * 
  * The mapping in the index configuration is used to check JSON documents retrieved from Fedora 
  * before indexing. Properties which do not have a mapping or otherwise cannot be indexed are
- * logged and ignored. On start the index is checked.
+ * logged and ignored. On start the index configuration is checked. There is special handling
+ * for *_suggest fields. The fcrepo_created and fcrepo_modified fields are retrieved from Fedora.
  * 
  * Properties which contain Fedora URIs have a custom matching with causes them to be indexed as
  * Fedora resource paths. This allows a client to search using different URIs which map to the same
@@ -183,9 +184,10 @@ public class ElasticSearchIndexer implements IndexerConstants {
         }
     }
     
-    // Return compact JSON-LD representation of Fedora resource without server triples
+    // Return Elasticsearch document for a Fedora resource.
+    // Retrieves the JSON-LD representation and then does checking and transforms.
     // Return null if resource is now a tombstone.
-    private String get_fedora_resource(String uri) throws IOException {
+    private String transform_fedora_resource(String uri) throws IOException {
         Request get = new Request.Builder().url(uri).header("Authorization", fedora_cred)
                 .header("Accept", FEDORA_ACCEPT_HEADER).header("Prefer", FEDORA_PREFER_HEADER).build();
 
@@ -200,9 +202,14 @@ public class ElasticSearchIndexer implements IndexerConstants {
                 throw new IOException(msg);
             }
 
-            return response.body().string();
+            String created = response.header(FEDORA_CREATED_HEADER);
+            String modified = response.header(FEDORA_MODIFIED_HEADER);
+            String json = response.body().string();
+            
+            return normalize_document(json, created, modified);
         }
     }
+    
     
     // Return URL safe base64 encoding of string.
     private String base64_encode(String s) {
@@ -218,10 +225,11 @@ public class ElasticSearchIndexer implements IndexerConstants {
         return es_index_url + "_doc/" + doc_id + "?pretty";
     }
 
-    // Do any normalization necessary before indexing.
+    // Do any normalization necessary before indexing the Fedora object JSON-LD.
     // Ignore and warn about keys not in the configuration or with object values
+    // Add created and modified fields from Fedora and handle *_suggest.
     
-    private String normalize_document(String json) {
+    private String normalize_document(String json, String created, String modified) {
         JSONObject o = new JSONObject(json);
         
         for (String key: JSONObject.getNames(o)) {
@@ -237,10 +245,19 @@ public class ElasticSearchIndexer implements IndexerConstants {
                 o.put(key + SUGGEST_SUFFIX, construct_completions(value.toString(), o));
             }
         }
-        
+
+        add_date(o, CREATED_FIELD, created);
+        add_date(o, MODIFIED_FIELD, modified);
+
         return o.toString();
     }
-
+    
+    private void add_date(JSONObject o, String field, String value) {
+        if (value != null && !value.isEmpty()) {
+            o.put(field, value);
+        }
+    }
+    
     // Text with n tokens separated by whitespace is turned into n completions,
     // one for each token. Each completion starts at the token and finishes at
     // the end of the text.
@@ -273,15 +290,14 @@ public class ElasticSearchIndexer implements IndexerConstants {
     private void update_document(String fedora_uri) throws IOException {
         LOG.debug("Updating document for Fedora resource: " + fedora_uri);
 
-        String fedora_json = get_fedora_resource(fedora_uri);
+        String doc = transform_fedora_resource(fedora_uri);
 
-        if (fedora_json == null) {
+        if (doc == null) {
             // Fedora resource was deleted. Assume a delete message is coming.
             LOG.debug("Fedora resource was deleted: " + fedora_uri);
             return;
         }
         
-        String doc = normalize_document(fedora_json);
         String doc_id = get_document_id(fedora_uri);
         String doc_url = get_create_document_url(doc_id);
 
