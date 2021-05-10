@@ -46,7 +46,9 @@
       "properties": {
         "@context": {"type": "keyword", "normalizer": "fedora_uri"},
         "@id": {"type": "keyword", "normalizer": "fedora_uri"},
-        "@type": {"type": "keyword"},        
+        "fcrepo_created": {"type": "date"},
+        "fcrepo_modified": {"type": "date"},
+        "@type": {"type": "keyword"},	  
         "abstract": {"type": "text"},
         "accessUrl": {"type": "keyword", "normalizer": "fedora_uri"},
         "affiliation": {"type": "text"},
