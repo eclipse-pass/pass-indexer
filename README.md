@@ -11,13 +11,12 @@ The pass-indexer keeps an [Elasticsearch](https://github.com/elastic/elasticsear
 The pass-indexer monitors a JMS queue for messages about creation, deletion, and modification of Fedora resources.
 (Fedora must be configured appropriately to setup this queue.)
 
-The Elasticsearch index is created on startup if it does not exist with a set [configuration](pass-indexer-core/src/main/resources/esindex.json).
-(That configuration default can be changed.)
-If the index does exist, the configuration is retrieved from the index. In either case the mapping must match the documents which will be indexed.
-The Elasticsearch document is the compact JSON-LD representation of that resource without server triples. If a key on the document is not present
-in the mapping for the index, then the key is removed from the document and a warning is logged.
-
-When there is a message about a resource of a type being monitored, the indexer either creates a corresponding document in Elasticsearch 
+The Elasticsearch index is created on startup if it does not exist. (The configuration of a new index can be specified.)
+If the index does exist, the configuration is retrieved from the index. In either case the index mapping must be consistent with incoming Fedora objects.
+The Elasticsearch document is the compact JSON-LD representation of that resource without server triples.
+If a key on the document is not present in the mapping for the index, then the key is removed from the document and a warning is logged.
+Object values are not supported and are removed. If there are X-CREATED and X-MODIFIED headers present, then they are put into fcrepo_created and fcrepo_modified
+fields respectively. When there is a message about a resource of a type being monitored, the indexer either creates a corresponding document in Elasticsearch 
 from the Fedora resource, updates such a document, or deletes the document.  Only messages about a resource of a type which matches a
 configured prefix, PI_TYPE_PREFIX, are handled. The id of the Elasticsearch document is the safe URL base64 encoding of resource path. This lets both the document be created and updated with the same PUT.
 
@@ -88,3 +87,11 @@ The PI_FEDORA_USER and PI_FEDORA_PASS are the credentials used to connect to Fed
 The PI_FEDORA_JMS_USER and PI_FEDORA_JMS_PASSWORD are credentials used to connect to the activemq broker, if it is secured.
 
 The PI_ES_INDEX is the index where Fedora documents are sent. PI_ES_CONFIG is the configuration used to create an index if it does not exist. It must be set even if not used. It's value may be a file path or a classpath resource or a URL. 
+
+# Running Integration Tests
+
+Use `docker-compose up` to start Fedora and Elasticsearch containers.
+Then `mvn verify` will start the integration tests.
+
+The tests do not clean up Fedora or Elasticsearch so they can be inspected in case of test failures. To rerun the tests you must `docker-compose down` and then `docker volume prune`.
+
