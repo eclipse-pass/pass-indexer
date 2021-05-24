@@ -38,6 +38,7 @@ public class PassIndexerIT implements IndexerConstants {
 	private static final String fedora_base_uri = "http://localhost:8080/fcrepo/rest/";
 	private static final String es_uri = "http://localhost:9200/_search";
 	private static final MediaType JSON_LD = MediaType.parse("application/ld+json; charset=utf-8");
+	private static final MediaType JSON_MERGE_PATCH = MediaType.parse("application/merge-patch+json; charset=utf-8");
 	private static final int WAIT_TIME = 20 * 1000;
 
 	private static FedoraIndexerService serv;
@@ -86,11 +87,11 @@ public class PassIndexerIT implements IndexerConstants {
 	}
 
 	// Update a Fedora resource
-	private void put_fedora_resource(String uri, JSONObject content) throws Exception {
-		RequestBody body = RequestBody.create(JSON_LD, content.toString());
+	private void patch_fedora_resource(String uri, JSONObject content) throws Exception {
+		RequestBody body = RequestBody.create(JSON_MERGE_PATCH, content.toString());
 
 		Request put = new Request.Builder().url(uri).header("Authorization", fedora_cred)
-				.header("Prefer", FEDORA_PREFER_HEADER).put(body).build();
+				.header("Prefer", FEDORA_PREFER_HEADER).patch(body).build();
 
 		try (Response response = client.newCall(put).execute()) {
 			if (!response.isSuccessful()) {
@@ -248,7 +249,7 @@ public class PassIndexerIT implements IndexerConstants {
 		// Update the Fedora resource
 		user.put("displayName", "Bob");
 
-		put_fedora_resource(uri, user);
+		patch_fedora_resource(uri, user);
 		Thread.sleep(WAIT_TIME);
 
 		// Check the Es document
