@@ -192,6 +192,12 @@ public class ElasticSearchIndexer implements IndexerConstants {
         try (Response response = client.newCall(get).execute()) {
             if (!response.isSuccessful()) {
                 if (response.code() == 410) {
+                    LOG.debug("Fedora resource was deleted: " + uri);
+                    return null;
+                }
+
+                if (response.code() == 406) {
+                    LOG.warn("Fedora resource does not have JSON-LD representation" + uri);
                     return null;
                 }
                 
@@ -280,8 +286,6 @@ public class ElasticSearchIndexer implements IndexerConstants {
         String fedora_json = get_fedora_resource(fedora_uri);
 
         if (fedora_json == null) {
-            // Fedora resource was deleted. Assume a delete message is coming.
-            LOG.debug("Fedora resource was deleted: " + fedora_uri);
             return null;
         }
         
