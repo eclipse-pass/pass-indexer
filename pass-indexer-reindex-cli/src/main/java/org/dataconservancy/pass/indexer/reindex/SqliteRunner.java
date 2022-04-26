@@ -40,7 +40,7 @@ public class SqliteRunner implements AutoCloseable {
 
     static final String STMNT_CREATE_TABLE_RESULTS = "CREATE TABLE results ("
             + "id INTEGER PRIMARY KEY, url TEXT NOT NULL, type TEXT NOT NULL, "
-            + "status INTEGER NOT NULL, result TEXT NOT NULL)";
+            + "status INTEGER NOT NULL, result TEXT)";
 
     static final String STMNT_CREATE_TABLE_TYPE_QUEUE = String.format(
             "CREATE TABLE types_queue ("
