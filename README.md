@@ -1,6 +1,3 @@
-[![Build Status](https://travis-ci.org/OA-PASS/pass-indexer.png?branch=master)](https://travis-ci.org/OA-PASS/pass-indexer)
-
-
 # Introduction
 
 The pass-indexer keeps an [Elasticsearch](https://github.com/elastic/elasticsearch) index up to date with resources in a
@@ -65,7 +62,7 @@ A custom normalizer is defined to help searching award numbers.
 * Strip out whitespace, dashes, and periods
 * Ignore the first 3 characters and zero padding in NIH award numbers.
 
-# Command line tool
+# Command line indexing tool
 
 The command line tool runs the indexer with the configuration either specifies as environment variable or system
 properties. 
@@ -88,3 +85,15 @@ The PI_FEDORA_USER and PI_FEDORA_PASS are the credentials used to connect to Fed
 The PI_FEDORA_JMS_USER and PI_FEDORA_JMS_PASSWORD are credentials used to connect to the activemq broker, if it is secured.
 
 The PI_ES_INDEX is the index where Fedora documents are sent. PI_ES_CONFIG is the configuration used to create an index if it does not exist. It must be set even if not used. It's value may be a file path or a classpath resource or a URL. 
+
+
+# Command line reindexing tool
+
+This tool reads objects from Fedora and writes them to an Elasticsearch index. Records are not removed. If the index does not exist, it will be created with the correct configuration.
+
+The PASS_FEDORA_BASEURL and PI_ES_INDEX environment variables must be set. A db is used to keep track of the indexing.
+The db writes out a db to the current working directory when run with no arguments. When run with a single argument, it adds record to the db.
+
+The results table of the db can be examined with sqlite to check for errors.
+
+

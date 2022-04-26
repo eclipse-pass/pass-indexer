@@ -192,6 +192,12 @@ public class ElasticSearchIndexer implements IndexerConstants {
         try (Response response = client.newCall(get).execute()) {
             if (!response.isSuccessful()) {
                 if (response.code() == 410) {
+                    LOG.debug("Fedora resource was deleted: " + uri);
+                    return null;
+                }
+
+                if (response.code() == 406) {
+                    LOG.warn("Fedora resource does not have JSON-LD representation" + uri);
                     return null;
                 }
                 
@@ -200,7 +206,11 @@ public class ElasticSearchIndexer implements IndexerConstants {
                 throw new IOException(msg);
             }
 
-            return response.body().string();
+            String doc = response.body().string();
+            if (!response.header("content-type", "application/ld+json").contains("json")) {
+                return null;
+            }
+            return doc;
         }
     }
     
@@ -270,15 +280,13 @@ public class ElasticSearchIndexer implements IndexerConstants {
     }
 
     // Create or update the document corresponding to a Fedora resource in Elasticsearch.
-    private void update_document(String fedora_uri) throws IOException {
+    public String update_document(String fedora_uri) throws IOException {
         LOG.debug("Updating document for Fedora resource: " + fedora_uri);
 
         String fedora_json = get_fedora_resource(fedora_uri);
 
         if (fedora_json == null) {
-            // Fedora resource was deleted. Assume a delete message is coming.
-            LOG.debug("Fedora resource was deleted: " + fedora_uri);
-            return;
+            return null;
         }
         
         String doc = normalize_document(fedora_json);
@@ -299,6 +307,8 @@ public class ElasticSearchIndexer implements IndexerConstants {
                 throw new IOException(msg);
             }
         }
+
+        return doc;
     }
 
     private void delete_document(String fedora_uri) throws IOException {
