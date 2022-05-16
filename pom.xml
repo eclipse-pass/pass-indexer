@@ -4,6 +4,12 @@
 
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>org.eclipse.pass</groupId>
+    <artifactId>eclipse-pass-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
   <groupId>org.dataconservancy.pass</groupId>
   <artifactId>pass-indexer</artifactId>
   <version>0.0.19-SNAPSHOT</version>
@@ -43,7 +49,7 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
           <version>3.1.1</version>
-        </plugin>        
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -67,11 +73,11 @@
         <version>${junit.version}</version>
       </dependency>
       
-    <dependency>
-      <groupId>org.dataconservancy.pass</groupId>
-      <artifactId>pass-indexer-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>      
+      <dependency>
+        <groupId>org.dataconservancy.pass</groupId>
+        <artifactId>pass-indexer-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
