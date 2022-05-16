@@ -37,18 +37,19 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
 
         // GET for Elasticsearch index
         server.enqueue(new MockResponse().setResponseCode(404));
-        
+
         // GET for Elasticsearch index config. Use URL for config to test support.
         try (InputStream is = ElasticSearchIndexerTest.class.getResourceAsStream("/esindex.json")) {
-            String json = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8"))).lines().collect(Collectors.joining("\n"));
+            String json = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8"))).lines().collect(
+                Collectors.joining("\n"));
             server.enqueue(new MockResponse().setBody(json));
         }
-        
+
         // PUT to create Elasticsearch index
         server.enqueue(new MockResponse().setBody("{}"));
-        
+
         indexer = new ElasticSearchIndexer(es_index_url.toString(), es_config_url.toString(), "admin", "admin");
-        
+
         // Drain index setup requests
         server.takeRequest();
         server.takeRequest();
@@ -68,9 +69,10 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
 
         JSONObject res_json = new JSONObject();
         res_json.put("@id", fedora_res_uri);
-        res_json.put("@type", "Cow");        
+        res_json.put("@type", "Cow");
         res_json.put("@context",
-                "https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm.jsonld");
+                     "https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm" +
+                     ".jsonld");
         res_json.put("healthy", true);
         res_json.put("awardNumber", "abc123");
         res_json.put("journalName", "This is the best journal");
@@ -89,7 +91,7 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         indexer.handle(m);
 
         // Check the requests
-        
+
         RecordedRequest fedora_get = server.takeRequest();
 
         assertEquals("GET", fedora_get.getMethod());
@@ -101,16 +103,16 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         RecordedRequest es_post = server.takeRequest();
 
         assertEquals("POST", es_post.getMethod());
-        
+
         JSONObject payload = new JSONObject(es_post.getBody().readUtf8());
-        
+
         // Check the JSON posted to Elasticsearch. 
-        
+
         // Healthy which is not in mapping should be removed
         assertFalse(payload.has("healthy"));
-        
+
         assertEquals(res_json.get("journalName"), payload.get("journalName"));
-        
+
         // Should have projectName_suggest added for projectName by Elasticsearch 
         // Should be completion for each word.
         String journal = res_json.get("journalName").toString();
@@ -119,15 +121,15 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         completions.forEach(o -> {
             assertTrue(journal.contains(o.toString()));
         });
-        
+
         assertEquals(res_json.get("@id"), payload.get("@id"));
-        assertEquals(res_json.get("@type"), payload.get("@type"));        
+        assertEquals(res_json.get("@type"), payload.get("@type"));
         assertEquals(res_json.get("name"), payload.get("name"));
-        
+
         assertEquals("application/json; charset=utf-8", es_post.getHeader("Content-Type"));
         assertTrue(es_post.getRequestUrl().toString().startsWith(es_index_url.toString()));
     }
-    
+
     @Test
     public void testCreateMessageIgnore410() throws Exception {
         // Mock message about created Fedora resource
@@ -145,7 +147,7 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         indexer.handle(m);
 
         // Check the requests
-        
+
         RecordedRequest fedora_get = server.takeRequest();
 
         assertEquals("GET", fedora_get.getMethod());
@@ -154,7 +156,7 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         assertEquals(FEDORA_PREFER_HEADER, fedora_get.getHeader("Prefer"));
         assertEquals(fedora_res_uri, fedora_get.getRequestUrl().toString());
     }
-    
+
     @Test
     public void testModifyMessage() throws Exception {
         // Mock message about modified Fedora resource
@@ -164,7 +166,8 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         JSONObject res_json = new JSONObject();
         res_json.put("@id", fedora_res_uri);
         res_json.put("@context",
-                "https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm.jsonld");
+                     "https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm" +
+                     ".jsonld");
         res_json.put("healthy", true);
         res_json.put("name", "moo");
 
@@ -193,14 +196,14 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         RecordedRequest post = server.takeRequest();
 
         assertEquals("POST", post.getMethod());
-        
+
         JSONObject payload = new JSONObject(post.getBody().readUtf8());
-        
+
         assertEquals(res_json.get("@id"), payload.get("@id"));
         assertEquals("application/json; charset=utf-8", post.getHeader("Content-Type"));
         assertTrue(post.getRequestUrl().toString().startsWith(es_index_url.toString()));
     }
-    
+
     @Test
     public void testDeleteMessage() throws Exception {
         // Mock message about deleted Fedora resource
@@ -221,7 +224,7 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
         RecordedRequest delete = server.takeRequest();
 
         assertEquals("DELETE", delete.getMethod());
-        
+
         assertTrue(delete.getRequestUrl().toString().startsWith(es_index_url.toString()));
-   }
+    }
 }

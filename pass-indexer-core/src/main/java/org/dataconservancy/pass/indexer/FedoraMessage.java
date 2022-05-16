@@ -25,7 +25,7 @@ public class FedoraMessage {
     private String res_uri;
     private String[] res_types;
     private FedoraAction action;
-    
+
     public String getResourceURI() {
         return res_uri;
     }
@@ -49,7 +49,7 @@ public class FedoraMessage {
     public void setAction(FedoraAction action) {
         this.action = action;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -62,22 +62,29 @@ public class FedoraMessage {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         FedoraMessage other = (FedoraMessage) obj;
-        if (action != other.action)
+        if (action != other.action) {
             return false;
-        if (!Arrays.equals(res_types, other.res_types))
+        }
+        if (!Arrays.equals(res_types, other.res_types)) {
             return false;
+        }
         if (res_uri == null) {
-            if (other.res_uri != null)
+            if (other.res_uri != null) {
                 return false;
-        } else if (!res_uri.equals(other.res_uri))
+            }
+        } else if (!res_uri.equals(other.res_uri)) {
             return false;
+        }
         return true;
     }
 

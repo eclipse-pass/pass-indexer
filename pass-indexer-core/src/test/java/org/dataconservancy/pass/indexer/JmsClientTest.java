@@ -55,7 +55,7 @@ public class JmsClientTest {
                 try (MessageProducer producer = session.createProducer(null)) {
                     producer.send(session.createQueue(queue), toSend);
                 }
-                
+
                 assertTrue(received.await(10, TimeUnit.SECONDS));
             }
         }

@@ -14,29 +14,27 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import okhttp3.Credentials;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import okhttp3.Credentials;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-
 /**
  * Maintain documents corresponding to the JSON-LD representation of Fedora resources.
  * The compact JSON-LD representation must be simple enough for Elasticsearch to understand.
  * Documents are updated when Fedora resources are created or modified or deleted.
  * The document id is the path of the Fedora URI encoded as base64 safe for URLs.
- * 
- * The mapping in the index configuration is used to check JSON documents retrieved from Fedora 
+ *
+ * The mapping in the index configuration is used to check JSON documents retrieved from Fedora
  * before indexing. Properties which do not have a mapping or otherwise cannot be indexed are
  * logged and ignored. On start the index is checked.
- * 
+ *
  * Properties which contain Fedora URIs have a custom matching with causes them to be indexed as
  * Fedora resource paths. This allows a client to search using different URIs which map to the same
  * Fedora resource.
@@ -49,26 +47,27 @@ public class ElasticSearchIndexer implements IndexerConstants {
     private final String fedora_cred;
     private final String es_index_url;
     private final Set<String> supported_fields;
-    
+
     // Fields which have a _suggest companion field of type completion.
-    private final Set<String> suggest_fields; 
-    
-    
+    private final Set<String> suggest_fields;
+
     /**
      * If the given Elasticsearch index does not exist, create it using the supplied configuration.
      * Otherwise the configuration is retrieved from the index.
-     * 
+     *
      * @param es_index_url
      * @param es_index_config - Either file or resource path to index config. If null, use provided PASS configuration.
      * @param fedora_user
      * @param fedora_pass
      * @throws IOException
      */
-    public ElasticSearchIndexer(String es_index_url, String es_index_config, String fedora_user, String fedora_pass) throws IOException {
-        this.client = new OkHttpClient.Builder().connectTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build();
+    public ElasticSearchIndexer(String es_index_url, String es_index_config, String fedora_user, String fedora_pass)
+        throws IOException {
+        this.client = new OkHttpClient.Builder().connectTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS)
+                                                .readTimeout(60, TimeUnit.SECONDS).build();
         this.es_index_url = es_index_url.endsWith("/") ? es_index_url : es_index_url + "/";
         this.fedora_cred = Credentials.basic(fedora_user, fedora_pass);
-        
+
         JSONObject config = get_existing_index_configuration();
 
         if (config == null) {
@@ -78,29 +77,31 @@ public class ElasticSearchIndexer implements IndexerConstants {
         } else {
             LOG.info("Found existing index " + es_index_url);
         }
-        
+
         // Determine the available fields in the index from the configuration and which fields support completion.
-        
+
         // The mappings key is either toplevel or inside an object representing the index.
         if (!config.has("mappings")) {
             Set<String> keys = config.keySet();
-            
+
             if (keys.size() == 1) {
                 config = config.getJSONObject(keys.iterator().next());
             }
         }
-        
+
         JSONObject props = config.getJSONObject("mappings").getJSONObject("_doc").getJSONObject("properties");
         this.supported_fields = new HashSet<>(props.keySet());
-        this.suggest_fields = supported_fields.stream().filter(f -> f.endsWith(SUGGEST_SUFFIX)).map(f -> 
-                f.substring(0, f.length() - SUGGEST_SUFFIX.length())).collect(Collectors.toSet());
+        this.suggest_fields = supported_fields.stream()
+            .filter(f -> f.endsWith(SUGGEST_SUFFIX))
+            .map(f -> f.substring(0, f.length() - SUGGEST_SUFFIX.length()))
+            .collect(Collectors.toSet());
     }
-   
+
     // Create index es_index_url with the given configuration
     private void create_index(JSONObject config) throws IOException {
         RequestBody body = RequestBody.create(JSON, config.toString());
         Request put = new Request.Builder().url(es_index_url).put(body).build();
-        
+
         try (Response response = client.newCall(put).execute()) {
             String result = response.body().string();
 
@@ -113,7 +114,7 @@ public class ElasticSearchIndexer implements IndexerConstants {
             }
         }
     }
-    
+
     // Return the index configuration specified as a file, resource, or URL.
     private JSONObject load_index_configuration(String es_index_config) throws IOException {
         boolean is_url = false;
@@ -122,6 +123,7 @@ public class ElasticSearchIndexer implements IndexerConstants {
             new URL(es_index_config);
             is_url = true;
         } catch (MalformedURLException e) {
+            // Nothing to do?
         }
 
         if (is_url) {
@@ -132,7 +134,7 @@ public class ElasticSearchIndexer implements IndexerConstants {
             try (Response response = client.newCall(get).execute()) {
                 if (!response.isSuccessful()) {
                     String msg = "Failed to retrieve specified index config: " + es_index_config + " "
-                            + response.code();
+                                 + response.code();
                     LOG.error(msg);
                     throw new IOException(msg);
                 }
@@ -140,7 +142,7 @@ public class ElasticSearchIndexer implements IndexerConstants {
                 return new JSONObject(response.body().string());
             }
         }
- 
+
         Path path = Paths.get(es_index_config);
 
         if (Files.exists(path)) {
@@ -167,12 +169,12 @@ public class ElasticSearchIndexer implements IndexerConstants {
     // Return the current index configuration or null if it does not exist.
     private JSONObject get_existing_index_configuration() throws IOException {
         Request get = new Request.Builder().url(es_index_url).build();
-        
+
         try (Response response = client.newCall(get).execute()) {
             if (response.code() == 404) {
                 return null;
             }
-        
+
             if (!response.isSuccessful()) {
                 String msg = "Failed to retrieve index config: " + es_index_url + " " + response.code();
                 LOG.error(msg);
@@ -182,12 +184,13 @@ public class ElasticSearchIndexer implements IndexerConstants {
             return new JSONObject(response.body().string());
         }
     }
-    
+
     // Return compact JSON-LD representation of Fedora resource without server triples
     // Return null if resource is now a tombstone.
     private String get_fedora_resource(String uri) throws IOException {
         Request get = new Request.Builder().url(uri).header("Authorization", fedora_cred)
-                .header("Accept", FEDORA_ACCEPT_HEADER).header("Prefer", FEDORA_PREFER_HEADER).build();
+                                           .header("Accept", FEDORA_ACCEPT_HEADER)
+                                           .header("Prefer", FEDORA_PREFER_HEADER).build();
 
         try (Response response = client.newCall(get).execute()) {
             if (!response.isSuccessful()) {
@@ -200,7 +203,7 @@ public class ElasticSearchIndexer implements IndexerConstants {
                     LOG.warn("Fedora resource does not have JSON-LD representation" + uri);
                     return null;
                 }
-                
+
                 String msg = "Failed to retrieve Fedora resource: " + uri + " " + response.code();
                 LOG.error(msg);
                 throw new IOException(msg);
@@ -213,7 +216,7 @@ public class ElasticSearchIndexer implements IndexerConstants {
             return doc;
         }
     }
-    
+
     // Return URL safe base64 encoding of string.
     private String base64_encode(String s) {
         return Base64.getUrlEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
@@ -230,11 +233,11 @@ public class ElasticSearchIndexer implements IndexerConstants {
 
     // Do any normalization necessary before indexing.
     // Ignore and warn about keys not in the configuration or with object values
-    
+
     private String normalize_document(String json) {
         JSONObject o = new JSONObject(json);
-        
-        for (String key: JSONObject.getNames(o)) {
+
+        for (String key : JSONObject.getNames(o)) {
             Object value = o.get(key);
 
             if (!supported_fields.contains(key)) {
@@ -247,7 +250,7 @@ public class ElasticSearchIndexer implements IndexerConstants {
                 o.put(key + SUGGEST_SUFFIX, construct_completions(value.toString(), o));
             }
         }
-        
+
         return o.toString();
     }
 
@@ -256,26 +259,26 @@ public class ElasticSearchIndexer implements IndexerConstants {
     // the end of the text.
     private JSONArray construct_completions(String text, JSONObject o) {
         JSONArray result = new JSONArray();
-        
+
         int completion = 0;
         boolean whitespace = true;
-        
+
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
-            
+
             if (whitespace) {
                 if (!Character.isWhitespace(c)) {
                     whitespace = false;
-                    
+
                     result.put(completion++, text.substring(i));
                 }
-            } else  {
+            } else {
                 if (Character.isWhitespace(c)) {
                     whitespace = true;
                 }
             }
         }
-                
+
         return result;
     }
 
@@ -288,21 +291,21 @@ public class ElasticSearchIndexer implements IndexerConstants {
         if (fedora_json == null) {
             return null;
         }
-        
+
         String doc = normalize_document(fedora_json);
         String doc_id = get_document_id(fedora_uri);
         String doc_url = get_create_document_url(doc_id);
 
         RequestBody body = RequestBody.create(JSON, doc);
         Request post = new Request.Builder().url(doc_url).post(body).build();
-        
+
         try (Response response = client.newCall(post).execute()) {
             String result = response.body().string();
 
             if (response.isSuccessful()) {
                 LOG.debug("Update success: " + response);
             } else {
-                String msg = "Update failure: " + result; 
+                String msg = "Update failure: " + result;
                 LOG.error(msg);
                 throw new IOException(msg);
             }
@@ -318,7 +321,7 @@ public class ElasticSearchIndexer implements IndexerConstants {
         String doc_url = get_create_document_url(doc_id);
 
         Request delete = new Request.Builder().url(doc_url).delete().build();
-        
+
         try (Response response = client.newCall(delete).execute()) {
             String result = response.body().string();
 
@@ -334,15 +337,15 @@ public class ElasticSearchIndexer implements IndexerConstants {
         LOG.debug("Handling Fedora message: " + m);
 
         switch (m.getAction()) {
-        case CREATED:
-        case MODIFIED:
-            update_document(m.getResourceURI());
-            break;
-        case DELETED:
-            delete_document(m.getResourceURI());
-            break;
-        default:
-            break;
+            case CREATED:
+            case MODIFIED:
+                update_document(m.getResourceURI());
+                break;
+            case DELETED:
+                delete_document(m.getResourceURI());
+                break;
+            default:
+                break;
         }
     }
 }
