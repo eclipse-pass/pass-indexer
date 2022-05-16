@@ -12,16 +12,15 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.stream.Collectors;
 
+import okhttp3.HttpUrl;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import okhttp3.HttpUrl;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 
 public class ElasticSearchIndexerTest implements IndexerConstants {
     private MockWebServer server;
@@ -106,14 +105,14 @@ public class ElasticSearchIndexerTest implements IndexerConstants {
 
         JSONObject payload = new JSONObject(es_post.getBody().readUtf8());
 
-        // Check the JSON posted to Elasticsearch. 
+        // Check the JSON posted to Elasticsearch.
 
         // Healthy which is not in mapping should be removed
         assertFalse(payload.has("healthy"));
 
         assertEquals(res_json.get("journalName"), payload.get("journalName"));
 
-        // Should have projectName_suggest added for projectName by Elasticsearch 
+        // Should have projectName_suggest added for projectName by Elasticsearch
         // Should be completion for each word.
         String journal = res_json.get("journalName").toString();
         JSONArray completions = payload.getJSONArray("journalName_suggest");
