@@ -142,13 +142,12 @@ public class SqliteRunnerTest {
 
             return Stream.empty();
         }, uri -> {
-
-            if (itemFailures.hasMore()) {
-                throw new RuntimeException("expected failure");
-            }
-            processed.add(uri);
-            return uri.toString();
-        });
+                if (itemFailures.hasMore()) {
+                    throw new RuntimeException("expected failure");
+                }
+                processed.add(uri);
+                return uri.toString();
+            });
 
         return processed;
     }

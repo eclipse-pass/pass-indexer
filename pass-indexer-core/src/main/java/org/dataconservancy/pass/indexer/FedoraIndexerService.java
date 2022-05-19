@@ -1,13 +1,11 @@
 package org.dataconservancy.pass.indexer;
 
 import java.io.IOException;
-
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * Setup a handler that reads Fedora events from a JMS queue and updates an
@@ -24,7 +22,7 @@ public class FedoraIndexerService implements AutoCloseable {
     private String fedora_user;
     private String fedora_pass;
     private String elasticsearch_index_config;
-    
+
     public void setJmsConnectionFactory(ConnectionFactory conf_fact) {
         this.jms_con_fact = conf_fact;
     }
@@ -40,7 +38,7 @@ public class FedoraIndexerService implements AutoCloseable {
     public void setElasticsearchIndexUrl(String elasticsearch_index_url) {
         this.elasticsearch_index_url = elasticsearch_index_url;
     }
-    
+
     public void setElasticsearchIndexConfig(String elasticsearch_index_config) {
         this.elasticsearch_index_config = elasticsearch_index_config;
     }
@@ -69,17 +67,18 @@ public class FedoraIndexerService implements AutoCloseable {
             LOG.error(msg);
             throw new IOException(msg);
         }
-        
+
         if (elasticsearch_index_config == null) {
             String msg = "Index configuration not specified.";
             LOG.error(msg);
             throw new IOException(msg);
         }
-        
+
         jms_client = new JmsClient(jms_con_fact);
 
-        ElasticSearchIndexer es = new ElasticSearchIndexer(elasticsearch_index_url, elasticsearch_index_config, fedora_user, fedora_pass);
-        
+        ElasticSearchIndexer es = new ElasticSearchIndexer(elasticsearch_index_url, elasticsearch_index_config,
+                                                           fedora_user, fedora_pass);
+
         jms_client.listen(jms_queue, msg -> {
             try {
                 FedoraMessage fedora_msg = FedoraMessageConverter.convert(msg);
@@ -89,7 +88,7 @@ public class FedoraIndexerService implements AutoCloseable {
                 if (should_handle) {
                     es.handle(fedora_msg);
                 } else {
-                	LOG.debug("Ignore Fedora message without known RDF type: " + fedora_msg);
+                    LOG.debug("Ignore Fedora message without known RDF type: " + fedora_msg);
                 }
             } catch (IOException | JMSException e) {
                 throw new RuntimeException(e);

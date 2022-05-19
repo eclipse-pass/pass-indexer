@@ -39,31 +39,33 @@ public class SqliteRunner implements AutoCloseable {
     public static final int PROGRESS_DONE = 100;
 
     static final String STMNT_CREATE_TABLE_RESULTS = "CREATE TABLE results ("
-            + "id INTEGER PRIMARY KEY, url TEXT NOT NULL, type TEXT NOT NULL, "
-            + "status INTEGER NOT NULL, result TEXT)";
+                                                     + "id INTEGER PRIMARY KEY, url TEXT NOT NULL, type TEXT NOT NULL, "
+                                                     + "status INTEGER NOT NULL, result TEXT)";
 
     static final String STMNT_CREATE_TABLE_TYPE_QUEUE = String.format(
-            "CREATE TABLE types_queue ("
-                    + "id INTEGER PRIMARY KEY, type TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT %d)",
-                    PROGRESS_ENQUEUED);
+        "CREATE TABLE types_queue ("
+        + "id INTEGER PRIMARY KEY, type TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT %d)",
+        PROGRESS_ENQUEUED);
 
     static final String STMNT_CREATE_TABLE_ITEM_QUEUE = String.format("CREATE TABLE item_queue ("
-            + "id INTEGER PRIMARY KEY, type TEXT NOT NULL, url TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT %d)",
-            PROGRESS_ENQUEUED);
+                                                                      + "id INTEGER PRIMARY KEY, type TEXT NOT NULL, " +
+                                                                      "url TEXT NOT NULL, progress INTEGER NOT NULL " +
+                                                                      "DEFAULT %d)",
+                                                                      PROGRESS_ENQUEUED);
 
     static final String STMNT_ITEM_START = String.format("UPDATE item_queue SET progress = %s WHERE id = ?",
-            PROGRESS_RUNNING);
+                                                         PROGRESS_RUNNING);
     static final String STMNT_ITEM_REMOVE = String.format("DELETE FROM item_queue WHERE id = ?");
     static final String STMNT_ITEM_FAIL = String.format("UPDATE item_queue SET progress = %d WHERE id = ?",
-            PROGRESS_FAILED);
+                                                        PROGRESS_FAILED);
     static final String STMNT_ITEM_SAVE_RESULT = "INSERT INTO results (type, url, status, result) VALUES (?, ?, ?, ?)";
     static final String STMNT_ITEM_POLL = String
-            .format("SELECT id, type, url FROM item_queue WHERE progress = %d LIMIT ?", PROGRESS_ENQUEUED);
+        .format("SELECT id, type, url FROM item_queue WHERE progress = %d LIMIT ?", PROGRESS_ENQUEUED);
 
     static final String STMNT_FAIL_COUNT_TYPES = String.format("SELECT count(*) FROM  types_queue WHERE progress = %d",
-            PROGRESS_FAILED);
+                                                               PROGRESS_FAILED);
     static final String STMNT_FAIL_COUNT_ITEMS = String.format("SELECT count(*) FROM item_queue WHERE PROGRESS = %d",
-            PROGRESS_FAILED);
+                                                               PROGRESS_FAILED);
 
     private final Connection conn;
     private final String filepath;
@@ -188,10 +190,11 @@ public class SqliteRunner implements AutoCloseable {
             execQuery(STMNT_ITEM_POLL, stmnt -> {
                 stmnt.setInt(1, count);
             }, results -> {
-                while (results.next()) {
-                    items.add(new Item(results.getInt(1), results.getString(2), results.getString(3)).start(conn));
+                    while (results.next()) {
+                        items.add(new Item(results.getInt(1), results.getString(2), results.getString(3)).start(conn));
+                    }
                 }
-            });
+            );
         }
 
         return items;
@@ -233,9 +236,9 @@ public class SqliteRunner implements AutoCloseable {
 
             // Count from types queue
             execQuery(String.format("SELECT count(*) from types_queue WHERE progress = %d;", PROGRESS_ENQUEUED), null,
-                    results -> {
-                        isDone.set(results.next() && results.getInt(1) == 0);
-                    });
+                results -> {
+                    isDone.set(results.next() && results.getInt(1) == 0);
+                });
 
             return isDone.get();
         }
@@ -269,9 +272,9 @@ public class SqliteRunner implements AutoCloseable {
             autocommit();
 
             execUpdate(String.format("UPDATE types_queue SET progress = %d WHERE progress = %d", PROGRESS_ENQUEUED,
-                    PROGRESS_FAILED), null);
+                                     PROGRESS_FAILED), null);
             execUpdate(String.format("UPDATE item_queue SET progress = %d WHERE progress = %d", PROGRESS_ENQUEUED,
-                    PROGRESS_FAILED), null);
+                                     PROGRESS_FAILED), null);
         }
     }
 
@@ -305,7 +308,7 @@ public class SqliteRunner implements AutoCloseable {
     }
 
     private void execQuery(String query, SQLConsumer<PreparedStatement> statementHandler,
-            SQLConsumer<ResultSet> resultHandler) {
+                           SQLConsumer<ResultSet> resultHandler) {
 
         try (PreparedStatement q = conn.prepareStatement(query)) {
             if (statementHandler != null) {
@@ -438,7 +441,7 @@ public class SqliteRunner implements AutoCloseable {
                 begin();
                 entity = (Class<? extends PassEntity>) Class.forName(type.get());
                 execUpdate(String.format("UPDATE types_queue SET progress = %s WHERE type = '%s'", PROGRESS_RUNNING,
-                        type.get()), null);
+                                         type.get()), null);
                 commit();
             } catch (Exception e) {
                 rollback();
@@ -450,7 +453,7 @@ public class SqliteRunner implements AutoCloseable {
     }
 
     private void enqueue(Class<? extends PassEntity> type,
-            Function<Class<? extends PassEntity>, Stream<URI>> lister) {
+                         Function<Class<? extends PassEntity>, Stream<URI>> lister) {
 
         synchronized (conn) {
             try {
@@ -464,15 +467,15 @@ public class SqliteRunner implements AutoCloseable {
                 });
 
                 execUpdate(String.format("UPDATE types_queue SET progress = %d WHERE type = '%s'", PROGRESS_DONE,
-                        type.getName()),
-                        null);
+                                         type.getName()),
+                           null);
 
                 commit();
             } catch (Exception e) {
                 rollback();
                 autocommit();
                 execUpdate(String.format("UPDATE types_queue SET progress = %d WHERE type = '%s'", PROGRESS_FAILED,
-                        type.getName()), null);
+                                         type.getName()), null);
                 LOG.warn("error loading item queue", e);
             }
         }

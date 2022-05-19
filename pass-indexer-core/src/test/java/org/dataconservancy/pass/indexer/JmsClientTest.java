@@ -20,7 +20,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -55,7 +54,7 @@ public class JmsClientTest {
                 try (MessageProducer producer = session.createProducer(null)) {
                     producer.send(session.createQueue(queue), toSend);
                 }
-                
+
                 assertTrue(received.await(10, TimeUnit.SECONDS));
             }
         }

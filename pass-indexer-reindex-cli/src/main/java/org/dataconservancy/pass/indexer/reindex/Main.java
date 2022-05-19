@@ -9,21 +9,25 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.openpojo.reflection.PojoClass;
 import org.dataconservancy.pass.client.PassClient;
 import org.dataconservancy.pass.client.PassClientFactory;
 import org.dataconservancy.pass.indexer.ElasticSearchIndexer;
 import org.dataconservancy.pass.model.PassEntity;
 
-import com.openpojo.reflection.PojoClass;
-
 // Load configuration from system properties or environment variables.
 // Then start the Fedora indexer service.
 
 public class Main {
+
+    private Main() {
+    }
+
     @SuppressWarnings("unchecked")
     public static final Collection<Class<? extends PassEntity>> PASS_TYPES = enumerateClassesByExtendingType(
-            "org.dataconservancy.pass.model", PassEntity.class, null).stream().map(PojoClass::getClazz)
-    .map(cls -> (Class<? extends PassEntity>) cls).collect(Collectors.toList());
+        "org.dataconservancy.pass.model", PassEntity.class, null).stream().map(PojoClass::getClazz)
+                                                                 .map(cls -> (Class<? extends PassEntity>) cls)
+                                                                 .collect(Collectors.toList());
 
     // Check environment variable and then property.
     // Key must exist.
@@ -57,10 +61,11 @@ public class Main {
         String index = get_config("PI_ES_INDEX", "http://localhost:9200/pass/");
         System.out.println("Using index " + index);
         ElasticSearchIndexer es = new ElasticSearchIndexer(
-                index,
-                get_config("PI_ES_CONFIG",
-                        "https://raw.githubusercontent.com/OA-PASS/pass-data-model/master/src/main/resources/esconfig-3.5.json"),
-                get_config("PI_FEDORA_USER", "fedoraAdmin"), get_config("PI_FEDORA_PASS", "moo"));
+            index,
+            get_config("PI_ES_CONFIG",
+                       "https://raw.githubusercontent.com/OA-PASS/pass-data-model/master/src/main/resources/esconfig" +
+                       "-3.5.json"),
+            get_config("PI_FEDORA_USER", "fedoraAdmin"), get_config("PI_FEDORA_PASS", "moo"));
 
         PassClient client = PassClientFactory.getPassClient();
 
