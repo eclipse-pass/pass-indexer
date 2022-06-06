@@ -51,14 +51,12 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.unitils</groupId>
       <artifactId>unitils-core</artifactId>
-      <version>3.4.2</version>
       <scope>test</scope>
     </dependency>
 
@@ -99,7 +97,6 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
