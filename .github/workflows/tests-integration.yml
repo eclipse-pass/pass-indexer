@@ -1,4 +1,3 @@
-# Adding comment
 name: Run Integration Tests
 on:
   workflow_call
