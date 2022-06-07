@@ -32,3 +32,7 @@ jobs:
 
       - name: Run Integration Tests
         run: mvn verify --file pom.xml
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f "docker-compose.yml" down
