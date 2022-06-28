@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.dataconservancy.pass</groupId>
+    <groupId>org.eclipse.pass</groupId>
     <artifactId>pass-indexer</artifactId>
     <version>0.0.19-SNAPSHOT</version>
   </parent>
