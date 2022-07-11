@@ -28,7 +28,7 @@
     <json.version>20180130</json.version>
     <okhttp.version>4.10.0</okhttp.version>
     <openpojo.version>0.8.10</openpojo.version>
-    <pass.client.version>0.9.0-SNAPSHOT</pass.client.version>
+    <pass.client.version>0.1.0-SNAPSHOT</pass.client.version>
     <unitils.version>3.4.2</unitils.version>
   </properties>
 
