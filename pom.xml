@@ -13,7 +13,7 @@
   <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>pass indexer</name>
+  <name>Eclipse PASS indexer</name>
   <description>Module for pass indexing.</description>
   <url>https://github.com/eclipse-pass/pass-indexer</url>
   <licenses>
