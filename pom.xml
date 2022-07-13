@@ -15,12 +15,47 @@
 
   <name>pass indexer</name>
   <description>Module for pass indexing.</description>
+  <url>https://github.com/eclipse-pass/pass-indexer</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Jim Martino</name>
+      <email>jrm@jhu.edu</email>
+      <organization>The Sheridan Libraries, Johns Hopkins University</organization>
+      <organizationUrl>https://www.library.jhu.edu/</organizationUrl>
+    </developer>
+    <developer>
+      <name>Mark Patton</name>
+      <email>mpatton@jhu.edu</email>
+      <organization>The Sheridan Libraries, Johns Hopkins University</organization>
+      <organizationUrl>https://www.library.jhu.edu/</organizationUrl>
+    </developer>
+    <developer>
+      <name>John Abrahams</name>
+      <email>jabrah20@jhu.edu</email>
+      <organization>The Sheridan Libraries, Johns Hopkins University</organization>
+      <organizationUrl>https://www.library.jhu.edu/</organizationUrl>
+    </developer>
+  </developers>
 
   <modules>
     <module>pass-indexer-core</module>
     <module>pass-indexer-cli</module>
     <module>pass-indexer-reindex-cli</module>
   </modules>
+
+  <scm>
+    <connection>scm:git:git://github.com/eclipse-pass/pass-indexer.git</connection>
+    <developerConnection>scm:git:ssh://github.com:eclipse-pass/pass-indexer.git</developerConnection>
+    <url>http://github.com/eclipse-pass/pass-indexer/tree/main</url>
+    <tag>HEAD</tag>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -33,7 +68,6 @@
     <json.version>20180130</json.version>
     <okhttp.version>4.10.0</okhttp.version>
     <openpojo.version>0.8.10</openpojo.version>
-    <pass.client.version>0.1.0-SNAPSHOT</pass.client.version>
     <unitils.version>3.4.2</unitils.version>
   </properties>
 
