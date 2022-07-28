@@ -59,7 +59,9 @@ public class PassIndexerIT implements IndexerConstants {
 
     @AfterClass
     public static void cleanup() {
+        System.out.println("################# Cleanup ##################");
         serv.close();
+        System.out.println("                  Done");
     }
 
     // Create a Fedora resource and return the assigned URI.
@@ -83,8 +85,13 @@ public class PassIndexerIT implements IndexerConstants {
     private void put_fedora_resource(String uri, JSONObject content) throws Exception {
         RequestBody body = RequestBody.create(JSON_LD, content.toString());
 
-        Request put = new Request.Builder().url(uri).header("Authorization", fedora_cred)
-                                           .header("Prefer", FEDORA_PREFER_HEADER).put(body).build();
+        Request put = new Request.Builder()
+            .url(uri)
+            .header("Authorization", fedora_cred)
+            .header("Prefer", FEDORA_PREFER_HEADER)
+            .header("Prefer", FEDORA_PREFER_LENIENT_HEADER)
+            .put(body)
+            .build();
 
         try (Response response = client.newCall(put).execute()) {
             if (!response.isSuccessful()) {
