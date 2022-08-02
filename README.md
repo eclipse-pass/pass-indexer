@@ -54,6 +54,10 @@ at large. The private URI is used by the backend services and allows them to avo
 A custom normalizer is defined to handle fields containing fedora URIs mapping them to their Fedora resource path. This allows searches to be done using either the public
 or private URI.
 
+### Pass Indexer Test Note:
+
+In the integration test class `PassIndexerIT`, some tests may fail with an error message saying that some PUT requests fail because resources are system (fcrepo) managed. These errors are caused by 409 errors from Fedora See the Fedora documentation about the [Containers RESTful API](https://wiki.lyrasis.org/display/FEDORA475/RESTful+HTTP+API+-+Containers#RESTfulHTTPAPIContainers-YellowPUTCreatearesourcewithaspecifiedpath,orreplacethetriplesassociatedwitharesourcewiththetriplesprovidedintherequestbody.).
+
 # Award Number normalization
 
 A custom normalizer is defined to help searching award numbers.

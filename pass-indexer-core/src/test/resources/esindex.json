@@ -19,6 +19,16 @@
           "type": "pattern_replace",
           "pattern": "\\.|-|\\s",
           "replacement": ""
+        },
+        "nih_ending_suffix_ignore": {
+          "type": "pattern_replace",
+          "pattern": "\\A(.*)-[0-9]*\\Z",
+          "replacement": "$1"
+        },
+        "nih_leading_num_ignore": {
+          "type": "pattern_replace",
+          "pattern": "\\A[0-9]*",
+          "replacement": ""
         }
       },
       "normalizer": {
@@ -34,7 +44,7 @@
         },
         "award_number": {
           "type": "custom",
-          "char_filter": ["period_dash_whitespace_ignore", "nih_zero_ignore"],
+          "char_filter": ["nih_leading_num_ignore", "nih_ending_suffix_ignore", "nih_zero_ignore", "period_dash_whitespace_ignore"],
           "filter": ["lowercase", "asciifolding"]
         }
       }
@@ -48,7 +58,7 @@
         "@id": {"type": "keyword", "normalizer": "fedora_uri"},
         "@type": {"type": "keyword"},        
         "abstract": {"type": "text"},
-        "accessUrl": {"type": "keyword", "normalizer": "fedora_uri"},
+        "accessUrl": {"type": "keyword"},
         "affiliation": {"type": "text"},
         "aggregatedDepositStatus": {"type": "keyword"},
         "agreementText": {"type": "text"},
@@ -64,6 +74,7 @@
         "directFunder": {"type": "keyword", "normalizer": "fedora_uri"},
         "displayName": {"type": "text", "analyzer": "simple"},        
         "doi": {"type": "keyword", "normalizer": "ignorecase"},
+        "effectivePolicies": {"type": "keyword", "normalizer": "fedora_uri"},
         "email": {"type": "keyword", "normalizer": "ignorecase"},
         "endDate": {"type": "date"},
         "eventType": {"type": "keyword"},
@@ -107,6 +118,7 @@
         "repositoryCopy": {"type": "keyword", "normalizer": "fedora_uri"},
         "repositories": {"type": "keyword", "normalizer": "fedora_uri"},        
         "roles": {"type": "keyword"},
+	"schemas": {"type": "keyword"},
         "source": {"type": "keyword"},        
         "startDate": {"type": "date"},
         "submission": {"type": "keyword", "normalizer": "fedora_uri"},
